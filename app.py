@@ -13,7 +13,7 @@ if user:  # only if authenticated
     st.sidebar.markdown(f"👋 Hello, **{user['username']}**")
     logout_button()
 
-    # ---- your existing home UI ----
+    # ---- load animation ----
     def load_lottie_url(url):
         try:
             r = requests.get(url, timeout=10)
@@ -24,10 +24,12 @@ if user:  # only if authenticated
 
     animation = load_lottie_url("https://assets6.lottiefiles.com/packages/lf20_qp1q7mct.json")
 
+    # ---- sidebar navigation ----
     st.sidebar.title("🧭 Navigation")
-    st.sidebar.page_link("pages/2_Analysis.py", label="⚙️ Analyze Data")
-    st.sidebar.page_link("pages/3_Report.py", label="📊 Report")
+    st.sidebar.page_link("2_Analysis.py", label="⚙️ Analyze Data")
+    st.sidebar.page_link("3_Report.py", label="📊 Report")
 
+    # ---- main UI ----
     st.markdown("<h1 style='color:#1f77b4;'>🧠 Review Intelligence Hub</h1>", unsafe_allow_html=True)
 
     col1, col2 = st.columns([2, 3])
@@ -63,6 +65,4 @@ if user:  # only if authenticated
     st.markdown("---")
     st.markdown("### 👉 Ready to Begin?")
     if st.button("🚀 Proceed to Analyze", use_container_width=True):
-        st.switch_page("pages/2_Analysis.py")
-
-
+        st.switch_page("2_Analysis.py")
