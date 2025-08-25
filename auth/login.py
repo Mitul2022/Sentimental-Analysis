@@ -42,7 +42,7 @@ def run_query(query, params=None, fetch=False, many=False):
 def get_user(username: str):
     try:
         rows = run_query(
-            'SELECT user_id, username, password_hash, totp_secret FROM nlp.users WHERE username = %s;',
+            "SELECT user_id, username, password_hash, totp_secret FROM nlp.users WHERE username = %s;",
             (username,), fetch=True
         )
         if not rows:
@@ -65,7 +65,7 @@ def get_user(username: str):
 def create_user(username: str, password_plain: str):
     try:
         exists = run_query(
-            'SELECT 1 FROM nlp."user" WHERE username = %s;',
+            "SELECT 1 FROM nlp.users WHERE username = %s;",
             (username,), fetch=True
         )
         if exists:
@@ -74,7 +74,7 @@ def create_user(username: str, password_plain: str):
         secret = pyotp.random_base32()
         pwd_hash = bcrypt.hashpw(password_plain.encode(), bcrypt.gensalt()).decode()
         run_query(
-            'INSERT INTO nlp."user"(username, password_hash, totp_secret) VALUES (%s,%s,%s);',
+            "INSERT INTO nlp.users(username, password_hash, totp_secret) VALUES (%s,%s,%s);",
             (username, pwd_hash, secret)
         )
         return secret
@@ -85,7 +85,7 @@ def create_user(username: str, password_plain: str):
 def update_totp_secret(user_id, secret):
     try:
         run_query(
-            'UPDATE nlp.users SET totp_secret = %s WHERE user_id = %s;',
+            "UPDATE nlp.users SET totp_secret = %s WHERE user_id = %s;",
             (secret, user_id)
         )
     except Exception as e:
@@ -167,5 +167,6 @@ def ensure_logged_in():
     else:
         _login_ui()
     st.stop()
+
 
 
