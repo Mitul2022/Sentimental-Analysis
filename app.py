@@ -25,8 +25,8 @@ if user:  # only if authenticated
     animation = load_lottie_url("https://assets6.lottiefiles.com/packages/lf20_qp1q7mct.json")
 
     st.sidebar.title("🧭 Navigation")
-    st.sidebar.page_link("Pages/2_Analysis.py", label="⚙️ Analyze Data")
-    st.sidebar.page_link("Pages/3_Report.py", label="📊 Report")
+    st.sidebar.page_link("pages/2_Analysis.py", label="⚙️ Analyze Data")
+    st.sidebar.page_link("pages/3_Report.py", label="📊 Report")
 
     st.markdown("<h1 style='color:#1f77b4;'>🧠 Review Intelligence Hub</h1>", unsafe_allow_html=True)
 
@@ -64,3 +64,4 @@ if user:  # only if authenticated
     st.markdown("### 👉 Ready to Begin?")
     if st.button("🚀 Proceed to Analyze", use_container_width=True):
         st.switch_page("Pages/2_Analysis.py")
+
