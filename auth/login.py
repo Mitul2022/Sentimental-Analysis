@@ -3,6 +3,12 @@ import streamlit as st
 import psycopg2, psycopg2.extras
 import bcrypt, pyotp, qrcode, io
 
+import psycopg2
+import psycopg2.extras
+import streamlit as st
+import bcrypt
+import pyotp
+
 # ---------- DB Connection ----------
 def get_connection():
     DB = st.secrets["auth_postgres"]
@@ -15,36 +21,76 @@ def get_connection():
         cursor_factory=psycopg2.extras.RealDictCursor
     )
 
-def run_query(query: str, params=None, fetch: bool = False):
+# ---------- DB Utils ----------
+def run_query(query, params=None, fetch=False, many=False):
     conn = get_connection()
-    cur = conn.cursor()
-    cur.execute(query, params or ())
-    rows = cur.fetchall() if fetch else None
-    conn.commit()
-    cur.close()
-    conn.close()
-    return rows
+    try:
+        with conn:
+            with conn.cursor() as cur:
+                if params is not None and not isinstance(params, (list, tuple)):
+                    params = (params,)
+                if many:
+                    cur.executemany(query, params)
+                else:
+                    cur.execute(query, params)
+                if fetch:
+                    return cur.fetchall()
+    finally:
+        conn.close()
 
-# ---------- DB helpers ----------
+# ---------- DB Helpers ----------
 def get_user(username: str):
-    rows = run_query(
-        "SELECT user_id, username, password_hash, totp_secret FROM auth.users WHERE username = %s;",
-        (username,), fetch=True
-    )
-    return rows[0] if rows else None
+    try:
+        rows = run_query(
+            'SELECT user_id, username, password_hash, totp_secret FROM nlp."user" WHERE username = %s;',
+            (username,), fetch=True
+        )
+        if not rows:
+            return None
+        user = rows[0]
+        if isinstance(user, dict):
+            return user
+        else:
+            user_id, uname, pwd_hash, totp_secret = user
+            return {
+                "user_id": user_id,
+                "username": uname,
+                "password_hash": pwd_hash,
+                "totp_secret": totp_secret
+            }
+    except Exception as e:
+        st.error(f"🚨 Database error while fetching user: {e}")
+        return None
 
 def create_user(username: str, password_plain: str):
-    exists = run_query("SELECT 1 FROM auth.users WHERE username = %s;", (username,), fetch=True)
-    if exists:
-        return "Username already exists."
+    try:
+        exists = run_query(
+            'SELECT 1 FROM nlp."user" WHERE username = %s;',
+            (username,), fetch=True
+        )
+        if exists:
+            return "Username already exists."
 
-    secret = pyotp.random_base32()
-    pwd_hash = bcrypt.hashpw(password_plain.encode(), bcrypt.gensalt()).decode()
-    run_query("""
-        INSERT INTO auth.users(username, password_hash, totp_secret)
-        VALUES (%s,%s,%s);
-    """, (username, pwd_hash, secret))
-    return secret
+        secret = pyotp.random_base32()
+        pwd_hash = bcrypt.hashpw(password_plain.encode(), bcrypt.gensalt()).decode()
+        run_query(
+            'INSERT INTO nlp."user"(username, password_hash, totp_secret) VALUES (%s,%s,%s);',
+            (username, pwd_hash, secret)
+        )
+        return secret
+    except Exception as e:
+        st.error(f"🚨 Failed to create user: {e}")
+        return None
+
+def update_totp_secret(user_id, secret):
+    try:
+        run_query(
+            'UPDATE nlp."user" SET totp_secret = %s WHERE user_id = %s;',
+            (secret, user_id)
+        )
+    except Exception as e:
+        st.error(f"🚨 Failed to update TOTP secret: {e}")
+
 
 # ---------- UI components ----------
 def _registration_ui():
@@ -121,3 +167,4 @@ def ensure_logged_in():
     else:
         _login_ui()
     st.stop()
+
