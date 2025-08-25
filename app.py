@@ -1,38 +1,37 @@
+# app.py
 import streamlit as st
 import requests
 from streamlit_lottie import st_lottie
 from auth.login import ensure_logged_in, logout_button
 
-# ---- Page Config ----
 st.set_page_config(page_title="Review Intelligence Hub", layout="wide")
 
-# ---- Auth Guard ----
-user = ensure_logged_in()  # Stops execution if not logged in
+# ---- guard ----
+user = ensure_logged_in()  # Will stop execution if not logged in
 
-if user:  
-    # Sidebar user info
+if user:  # only if authenticated
     st.sidebar.markdown(f"👋 Hello, **{user['username']}**")
     logout_button()
 
-    # ---- Helper: Load Animation ----
-    def load_lottie_url(url: str):
+    # ---- load animation ----
+    def load_lottie_url(url):
         try:
             r = requests.get(url, timeout=10)
             if r.status_code == 200:
                 return r.json()
         except Exception:
             return None
-        return None
 
     animation = load_lottie_url("https://assets6.lottiefiles.com/packages/lf20_qp1q7mct.json")
 
-    # ---- Sidebar Navigation ----
+    # ---- sidebar navigation ----
     st.sidebar.title("🧭 Navigation")
-    st.sidebar.page_link("app.py", label="🏠 Home", icon="🏠")
-    st.sidebar.page_link("2_Analysis.py", label="⚙️ Analyze Data", icon="⚙️")
-    st.sidebar.page_link("3_Report.py", label="📊 Report", icon="📊")
+    if st.sidebar.button("⚙️ Analyze Data"):
+        st.switch_page("2_Analysis.py")
+    if st.sidebar.button("📊 Report"):
+        st.switch_page("3_Report.py")
 
-    # ---- Main Home UI ----
+    # ---- main UI ----
     st.markdown("<h1 style='color:#1f77b4;'>🧠 Review Intelligence Hub</h1>", unsafe_allow_html=True)
 
     col1, col2 = st.columns([2, 3])
@@ -53,7 +52,6 @@ if user:
         </div>
         """, unsafe_allow_html=True)
 
-    # ---- Workflow Section ----
     st.markdown("---")
     with st.expander("🔧 How This App Works"):
         st.markdown("""
@@ -66,7 +64,6 @@ if user:
         6. 📥 **Generate & download reports** (Excel/PDF) from the **Report** page.  
         """)
 
-    # ---- Call-to-Action ----
     st.markdown("---")
     st.markdown("### 👉 Ready to Begin?")
     if st.button("🚀 Proceed to Analyze", use_container_width=True):
