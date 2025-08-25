@@ -63,5 +63,6 @@ if user:  # only if authenticated
     st.markdown("---")
     st.markdown("### 👉 Ready to Begin?")
     if st.button("🚀 Proceed to Analyze", use_container_width=True):
-        st.switch_page("Pages/2_Analysis.py")
+        st.switch_page("pages/2_Analysis.py")
+
 
