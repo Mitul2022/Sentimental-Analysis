@@ -26,10 +26,8 @@ if user:  # only if authenticated
 
     # ---- sidebar navigation ----
     st.sidebar.title("🧭 Navigation")
-    if st.sidebar.button("⚙️ Analyze Data"):
-        st.switch_page("2_Analysis.py")
-    if st.sidebar.button("📊 Report"):
-        st.switch_page("3_Report.py")
+    st.sidebar.page_link("pages/2_Analysis.py", label="⚙️ Analyze Data")
+    st.sidebar.page_link("pages/3_Report.py", label="📊 Report")
 
     # ---- main UI ----
     st.markdown("<h1 style='color:#1f77b4;'>🧠 Review Intelligence Hub</h1>", unsafe_allow_html=True)
@@ -66,5 +64,4 @@ if user:  # only if authenticated
 
     st.markdown("---")
     st.markdown("### 👉 Ready to Begin?")
-    if st.button("🚀 Proceed to Analyze", use_container_width=True):
-        st.switch_page("2_Analysis.py")
+    st.page_link("pages/2_Analysis.py", label="🚀 Proceed to Analyze")
