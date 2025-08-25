@@ -4,7 +4,8 @@ streamlit-lottie==0.0.5
 psycopg2-binary
 pyotp
 bcrypt
-
+qrcode
+requests
 
 # Data Processing
 pandas==2.2.1
@@ -35,3 +36,4 @@ pyotp==2.9.0
 # Optional (for Excel files)
 
 openpyxl==3.1.2
+
