@@ -42,7 +42,7 @@ def run_query(query, params=None, fetch=False, many=False):
 def get_user(username: str):
     try:
         rows = run_query(
-            'SELECT user_id, username, password_hash, totp_secret FROM nlp."user" WHERE username = %s;',
+            'SELECT user_id, username, password_hash, totp_secret FROM nlp.users WHERE username = %s;',
             (username,), fetch=True
         )
         if not rows:
@@ -85,7 +85,7 @@ def create_user(username: str, password_plain: str):
 def update_totp_secret(user_id, secret):
     try:
         run_query(
-            'UPDATE nlp."user" SET totp_secret = %s WHERE user_id = %s;',
+            'UPDATE nlp.users SET totp_secret = %s WHERE user_id = %s;',
             (secret, user_id)
         )
     except Exception as e:
@@ -167,4 +167,5 @@ def ensure_logged_in():
     else:
         _login_ui()
     st.stop()
+
 
