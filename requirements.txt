@@ -20,7 +20,6 @@ transformers==4.31.0
 sentencepiece==0.1.99
 spacy==3.5.3
 nltk==3.8.1
-spacy==3.7.5
 
 # --- Visualization ---
 plotly==5.19.0
@@ -32,6 +31,7 @@ fpdf2==2.7.4
 
 # --- Other ---
 requests
+
 
 
 
