@@ -7,6 +7,7 @@ psycopg2-binary==2.9.9
 pyotp==2.9.0
 bcrypt==4.1.3
 qrcode
+spacy==3.7.5
 
 # --- Data Processing ---
 pandas==2.2.1
@@ -30,4 +31,5 @@ fpdf2==2.7.4
 
 # --- Other ---
 requests
+
 
