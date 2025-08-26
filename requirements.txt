@@ -24,6 +24,7 @@ torch==2.1.2
 sentence-transformers==2.2.2
 sentencepiece==0.2.0
 spacy==3.7.4
+en-core-web-sm 
 nltk==3.8.1
 
 # Visualization
@@ -39,6 +40,7 @@ psycopg2-binary==2.9.9
 pyotp==2.9.0
 bcrypt==4.1.3
 qrcode
+
 
 
 
