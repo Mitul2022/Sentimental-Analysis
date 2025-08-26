@@ -8,11 +8,11 @@ requests
 pandas==2.2.1
 numpy==1.24.3
 openpyxl==3.1.2
-transformers==4.30.2
-torch==1.13.1
+transformers==4.31.0
+torch==2.0.1
 sentence-transformers==2.2.2
-sentencepiece==0.2.0
-spacy==3.7.4
+sentencepiece==0.1.99
+spacy==3.5.3
 nltk==3.8.1
 plotly==5.19.0
 matplotlib==3.8.3
