@@ -1,19 +1,11 @@
-import streamlit as st
-import sys, os
+import sys
+import os
 
-# ---- Fix Python path so we can import auth/ properly ----
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
 from auth.login import ensure_logged_in, logout_button
-
-# ✅ Enforce login
-user = ensure_logged_in()
-if user is None:
-    st.stop()
-
-# ---- Sidebar ----
-st.sidebar.markdown(f"👋 Hello, **{user['username']}**")
-logout_button()
-
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -1044,4 +1036,5 @@ if st.button("Generate & Download PDF Report"):
             data=pdf_bytes,
             file_name="sentiment_analysis_report.pdf",
             mime="application/pdf",
+
         )
