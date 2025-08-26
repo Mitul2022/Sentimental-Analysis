@@ -16,7 +16,6 @@ openpyxl==3.1.2
 # --- NLP / Sentiment Analysis ---
 torch==2.0.1
 transformers==4.31.0
-sentence-transformers==2.2.2
 sentencepiece==0.1.99
 spacy==3.5.3
 nltk==3.8.1
@@ -31,3 +30,4 @@ fpdf2==2.7.4
 
 # --- Other ---
 requests
+
