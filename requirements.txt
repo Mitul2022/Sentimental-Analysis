@@ -15,7 +15,7 @@ numpy==1.24.3
 # NLP & Machine Learning
 # NLP & Machine Learning
 transformers==4.40.0
-torch==2.2.1
+torch==2.0.1 
 sentence-transformers==2.2.2 
 sentencepiece==0.2.0
 spacy==3.7.4
@@ -39,6 +39,7 @@ pyotp==2.9.0
 # Optional (for Excel files)
 
 openpyxl==3.1.2
+
 
 
 
