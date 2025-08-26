@@ -13,20 +13,15 @@ import torch
 import time
 from functools import lru_cache
 
-# ---- Fix Python path so we can import auth/ properly ----
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+import sys
+import os
 
-# ---- Auth guard ----
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
 from auth.login import ensure_logged_in, logout_button
 
-# ✅ Ensure user is logged in
-user = ensure_logged_in()
-if user is None:
-    st.stop()
-
-# ---- Sidebar user info ----
-st.sidebar.markdown(f"👋 Hello, **{user['username']}**")
-logout_button()
 
 # --- Page config
 st.set_page_config(page_title="Aspect-Based Feedback Analysis", layout="wide")
@@ -222,20 +217,33 @@ if uploaded_file:
             chosen = st.multiselect("🎯 Filter categories", cats)
             if chosen: df = df[df[category_col].astype(str).isin(chosen)]
 
-        common_aspects = [
-         "Quality", "Delivery", "Price", "Customer Service", 
-         "Packaging", "Refund", "Order", "Website", 
-         "Value", "Communication"
-         ]
-        custom_aspects = st.multiselect(
-          "📌 Choose common aspects", 
-           options=common_aspects,
-           default=common_aspects
-        )
+# --- Common Aspect Selection ---
+common_aspects = [
+    "Quality", "Delivery", "Price", "Customer Service", 
+    "Packaging", "Refund", "Order", "Website", 
+    "Value", "Communication"
+]
+custom_aspects = st.multiselect(
+    "📌 Choose common aspects", 
+    options=common_aspects,
+    default=common_aspects
+)
 
-        manual_aspects = st.text_input("✏️ Enter aspects manually (comma-separated)")
+# --- Manual Aspect Entry ---
+manual_aspects_input = st.text_input("✏️ Enter aspects manually (comma-separated)")
+
+# --- Combine Common and Manual Aspects ---
+# Start with the list from the multiselect
+final_aspects = list(custom_aspects)
+
+# Process and add the manually entered aspects
+if manual_aspects_input:
+    # Split the string by commas and strip whitespace
+    manual_list = [aspect.strip() for aspect in manual_aspects_input.split(',')]
+    # Add non-empty manual aspects to the final list
+    final_aspects.extend([aspect for aspect in manual_list if aspect])
         
-        if st.button("🚀 Process Data"):
+if st.button("🚀 Process Data"):
             with st.spinner("Processing reviews..."):
                 processed_df, summary_df = process_reviews(df, review_col, nps_col, custom_aspects)
                 st.session_state.processed_data, st.session_state.summary_data = processed_df, summary_df
@@ -267,4 +275,3 @@ if st.session_state.processed_data is not None:
     st.download_button("📥 Download Full Aspect Data",
                        st.session_state.processed_data.to_csv(index=False).encode("utf-8"),
                        "aspect_level_breakdown.csv","text/csv")
-
