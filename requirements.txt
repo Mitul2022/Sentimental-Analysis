@@ -6,7 +6,6 @@ pyotp
 bcrypt
 qrcode
 requests
-sentence-transformers
 
 # Data Processing
 pandas==2.2.1
@@ -39,6 +38,7 @@ pyotp==2.9.0
 # Optional (for Excel files)
 
 openpyxl==3.1.2
+
 
 
 
