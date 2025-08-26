@@ -22,13 +22,12 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud, STOPWORDS
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
-import spacy
-try:
-    nlp = spacy.load("en_core_web_sm")
-except OSError:
-    import spacy.cli
-    spacy.cli.download("en_core_web_sm")
-    nlp = spacy.load("en_core_web_sm")
+
+# =========================
+# Load spaCy NLP Model (Preinstalled in requirements.txt)
+# =========================
+nlp = spacy.load("en_core_web_sm")
+
 # =========================
 # Load NLP Sentiment Model (Cached)
 # =========================
@@ -49,7 +48,7 @@ def analyze_sentiment_with_scores(text):
         label_map = {"LABEL_2": "Positive", "LABEL_1": "Neutral", "LABEL_0": "Negative"}
         predicted_label = max(scores, key=scores.get)
         return label_map[predicted_label], scores
-    except Exception as e:
+    except Exception:
         return "Neutral", {"LABEL_0": 0.33, "LABEL_1": 0.34, "LABEL_2": 0.33}
 
 # =========================
@@ -68,14 +67,6 @@ def calculate_nps(df, pos_col="Positive_Score", neg_col="Negative_Score"):
     nps_score = promoters_pct - detractors_pct
     return promoters_pct, passives_pct, detractors_pct, nps_score
 
-# =========================
-# Load spaCy for NLP
-# =========================
-try:
-    nlp = spacy.load("en_core_web_sm")
-except OSError:
-    st.error("spaCy model 'en_core_web_sm' not found. Run: `python -m spacy download en_core_web_sm`")
-    st.stop()
 
 # --- Global Configuration ---
 NEGATIVE_ADJECTIVES = [
@@ -1044,6 +1035,7 @@ if st.button("Generate & Download PDF Report"):
             mime="application/pdf",
 
         )
+
 
 
 
