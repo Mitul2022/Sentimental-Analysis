@@ -11,8 +11,8 @@ from nltk.tag import pos_tag
 import torch
 import time
 from functools import lru_cache
-from sentence_transformers import SentenceTransformer, util
-
+from sentence_transformers import SentenceTransformer
+from sentence_transformers import util
 # ---- Fix Python path so we can import auth/ properly ----
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -295,5 +295,6 @@ if st.session_state.processed_data is not None:
     st.download_button("📥 Download Full Aspect Data",
                        st.session_state.processed_data.to_csv(index=False).encode("utf-8"),
                        "aspect_level_breakdown.csv","text/csv")
+
 
 
