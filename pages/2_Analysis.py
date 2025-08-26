@@ -13,6 +13,14 @@ import time
 from functools import lru_cache
 from sentence_transformers import SentenceTransformer
 from sentence_transformers import util
+import spacy
+try:
+    nlp = spacy.load("en_core_web_sm", disable=["ner", "parser"])
+except Exception:
+    import os
+    os.system("python -m spacy download en_core_web_sm")
+    nlp = spacy.load("en_core_web_sm", disable=["ner", "parser"])
+
 # ---- Fix Python path so we can import auth/ properly ----
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -295,6 +303,7 @@ if st.session_state.processed_data is not None:
     st.download_button("📥 Download Full Aspect Data",
                        st.session_state.processed_data.to_csv(index=False).encode("utf-8"),
                        "aspect_level_breakdown.csv","text/csv")
+
 
 
 
