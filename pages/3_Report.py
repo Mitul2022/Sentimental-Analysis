@@ -830,7 +830,7 @@ if not processed_df.empty and "Aspect" in processed_df.columns and "Aspect_Senti
 else:
     st.info("Data unavailable for treemap visualization.")
 
-# --- Smart N-Gram Analysis (Descending → Ascending) ---
+# --- Smart N-Gram Analysis (Descending) ---
 st.header("🧠 Relevant Phrase Analysis from Negative Feedback")
 if not processed_df.empty and "Aspect_Context" in processed_df.columns and "Aspect_Sentiment" in processed_df.columns:
     def extract_ngrams_from_text(text, n):
@@ -844,45 +844,66 @@ if not processed_df.empty and "Aspect_Context" in processed_df.columns and "Aspe
     if not negative_contexts:
         st.info("No negative feedback available for phrase analysis.")
     else:
-        three_word_phrases, four_word_phrases = [], []
+        three_word_phrases = []
+        four_word_phrases = []
 
         for context in negative_contexts:
             three_word_phrases.extend(extract_ngrams_from_text(context, 3))
             four_word_phrases.extend(extract_ngrams_from_text(context, 4))
 
-        # ✅ First get most_common (descending), then reverse for ascending
+        # Sort descending (high to low frequency)
         three_word_count = Counter(three_word_phrases).most_common(5)
         four_word_count = Counter(four_word_phrases).most_common(5)
 
-        # Create two versions: descending and ascending
-        three_word_desc = three_word_count
-        three_word_asc = sorted(three_word_count, key=lambda x: x[1])
+        # 3-Word Phrases (Descending)
+        st.subheader("3-Word Phrases: Top 5 (Descending Frequency)")
+        if three_word_count:
+            df_3w = pd.DataFrame([{"Phrase": phrase, "Count": count} for phrase, count in three_word_count])
+            fig_3w = px.bar(
+                df_3w, 
+                x="Count", 
+                y="Phrase", 
+                orientation='h',
+                text="Count", 
+                color="Count",  # ✅ gradient based on frequency
+                color_continuous_scale="Reds", 
+                title="Top 5 Negative 3-Word Phrases (High to Low)"
+            )
+            fig_3w.update_layout(
+                xaxis_title="Frequency", 
+                yaxis_title="Phrase", 
+                margin=dict(l=150, r=40, t=80, b=40),
+                coloraxis_colorbar=dict(title="Frequency")
+            )
+            st.plotly_chart(fig_3w, use_container_width=True)
+            st.session_state.chart_data['smart_trigrams'] = fig_3w
+        else:
+            st.info("No 3-word phrases found.")
 
-        four_word_desc = four_word_count
-        four_word_asc = sorted(four_word_count, key=lambda x: x[1])
-
-        # --- 3-Word Phrases ---
-        st.subheader("3-Word Phrases: Top 5 (Most → Least Frequent)")
-        if three_word_desc:
-            df_3w = pd.DataFrame([{"Phrase": phrase, "Count": count} for phrase, count in three_word_desc])
-            st.dataframe(df_3w)
-
-        st.subheader("3-Word Phrases: Top 5 (Least → Most Frequent)")
-        if three_word_asc:
-            df_3w_asc = pd.DataFrame([{"Phrase": phrase, "Count": count} for phrase, count in three_word_asc])
-            st.dataframe(df_3w_asc)
-
-        # --- 4-Word Phrases ---
-        st.subheader("4-Word Phrases: Top 5 (Most → Least Frequent)")
-        if four_word_desc:
-            df_4w = pd.DataFrame([{"Phrase": phrase, "Count": count} for phrase, count in four_word_desc])
-            st.dataframe(df_4w)
-
-        st.subheader("4-Word Phrases: Top 5 (Least → Most Frequent)")
-        if four_word_asc:
-            df_4w_asc = pd.DataFrame([{"Phrase": phrase, "Count": count} for phrase, count in four_word_asc])
-            st.dataframe(df_4w_asc)
-
+        # 4-Word Phrases (Descending)
+        st.subheader("4-Word Phrases: Top 5 (Descending Frequency)")
+        if four_word_count:
+            df_4w = pd.DataFrame([{"Phrase": phrase, "Count": count} for phrase, count in four_word_count])
+            fig_4w = px.bar(
+                df_4w, 
+                x="Count", 
+                y="Phrase", 
+                orientation='h',
+                text="Count", 
+                color="Count",  # ✅ gradient based on frequency
+                color_continuous_scale="Reds",
+                title="Top 5 Negative 4-Word Phrases (High to Low)"
+            )
+            fig_4w.update_layout(
+                xaxis_title="Frequency", 
+                yaxis_title="Phrase", 
+                margin=dict(l=150, r=40, t=80, b=40),
+                coloraxis_colorbar=dict(title="Frequency")
+            )
+            st.plotly_chart(fig_4w, use_container_width=True)
+            st.session_state.chart_data['smart_fourgrams'] = fig_4w
+        else:
+            st.info("No 4-word phrases found.")
 else:
     st.info("No data available for phrase analysis.")
 
@@ -1035,6 +1056,7 @@ if st.button("Generate & Download PDF Report"):
             mime="application/pdf",
 
         )
+
 
 
 
