@@ -12,9 +12,6 @@ from nltk.tag import pos_tag
 import torch
 import time
 from functools import lru_cache
-from sentence_transformers import SentenceTransformer
-from sentence_transformers import util
-
 
 # ---- Fix Python path so we can import auth/ properly ----
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -55,31 +52,6 @@ def load_spacy():
         return None
 
 nlp_spacy = load_spacy()
-
-# --- Load Relevance Model ---
-@st.cache_resource
-def load_relevance_model():
-    return SentenceTransformer("all-MiniLM-L6-v2")
-
-relevance_model = load_relevance_model()
-GENERIC_IRRELEVANT = [
-    "good","bad","excellent","amazing","terrible","awful","positive","negative","neutral",
-    "great","poor","awesome","nice","fantastic","perfect","horrible","decent","average"
-]
-irrelevant_embeddings = relevance_model.encode(GENERIC_IRRELEVANT, convert_to_tensor=True)
-
-# 🔁 Cache for word relevance lookups
-_word_sim_cache = {}
-def is_relevant_word(word: str, threshold: float = 0.75) -> bool:
-    if not word or len(word) < 2 or not word.isalpha():
-        return False
-    w = word.lower()
-    if w in _word_sim_cache:
-        return _word_sim_cache[w] < threshold
-    word_emb = relevance_model.encode([w], convert_to_tensor=True)
-    similarity = util.cos_sim(word_emb, irrelevant_embeddings).max().item()
-    _word_sim_cache[w] = similarity
-    return similarity < threshold
 
 # --- Sentiment Model ---
 @st.cache_resource
@@ -126,7 +98,7 @@ def extract_aspects_from_sentence(text, custom_aspects=None):
     if nlp_spacy:
         doc = nlp_spacy(text.lower())
         for token in doc:
-            if token.pos_ in ("NOUN", "PROPN") and is_relevant_word(token.text):
+            if token.pos_ in ("NOUN", "PROPN") and token.text.isalpha():
                 current.append(token.text)
             else:
                 if current:
@@ -135,7 +107,7 @@ def extract_aspects_from_sentence(text, custom_aspects=None):
     else:
         tokens = word_tokenize(text.lower())
         for word, tag in pos_tag(tokens):
-            if tag.startswith("NN") and word.isalpha() and is_relevant_word(word):
+            if tag.startswith("NN") and word.isalpha():
                 current.append(word)
             else:
                 if current:
@@ -170,7 +142,7 @@ def process_reviews(df, review_col, nps_col=None, custom_aspects=None):
 
     # Phase 2: Batched Sentiment
     sentiment_results = []
-    BATCH_SIZE = 128 if torch.cuda.is_available() else 64
+    BATCH_SIZE = 64
     for i in range(0, total_sentences, BATCH_SIZE):
         batch = sentences[i:i+BATCH_SIZE]
         try:
@@ -250,22 +222,19 @@ if uploaded_file:
             chosen = st.multiselect("🎯 Filter categories", cats)
             if chosen: df = df[df[category_col].astype(str).isin(chosen)]
 
-        # --- Common Aspect Selection (instead of CSV upload) ---
         common_aspects = [
          "Quality", "Delivery", "Price", "Customer Service", 
          "Packaging", "Refund", "Order", "Website", 
          "Value", "Communication"
          ]
-
         custom_aspects = st.multiselect(
           "📌 Choose common aspects", 
            options=common_aspects,
-           default=common_aspects  # ✅ preselect all
+           default=common_aspects
         )
 
         manual_aspects = st.text_input("✏️ Enter aspects manually (comma-separated)")
         
-
         if st.button("🚀 Process Data"):
             with st.spinner("Processing reviews..."):
                 processed_df, summary_df = process_reviews(df, review_col, nps_col, custom_aspects)
@@ -298,10 +267,3 @@ if st.session_state.processed_data is not None:
     st.download_button("📥 Download Full Aspect Data",
                        st.session_state.processed_data.to_csv(index=False).encode("utf-8"),
                        "aspect_level_breakdown.csv","text/csv")
-
-
-
-
-
-
-
