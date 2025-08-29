@@ -660,7 +660,7 @@ if not processed_df.empty and "Aspect" in processed_df.columns and "Aspect_Senti
             x="Aspect",
             y="Percent",
             color="Aspect_Sentiment",
-            title="Top 10 Aspect Sentiment Distribution (100% Stacked)",
+            title="Top 10 Aspect Sentiment Distribution",
             category_orders={"Aspect": top_10_aspects},
             color_discrete_map={"Positive": "green", "Neutral": "orange", "Negative": "red"},
             barmode="stack",
@@ -1113,6 +1113,7 @@ if st.button("Generate & Download PDF Report"):
             file_name="sentiment_analysis_report.pdf",
             mime="application/pdf",
         )
+
 
 
 
