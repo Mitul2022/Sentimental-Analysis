@@ -629,7 +629,7 @@ else:
     st.metric("📄 Total Reviews", total_reviews)
 
 # --- Aggregated Sentiment by Aspect (100% Stacked Column Chart) ---
-st.header("📊 Aggregated Sentiment by Aspect (100% Stacked)")
+st.header("📊 Aggregated Sentiment by Aspect")
 
 fig = None
 if not processed_df.empty and "Aspect" in processed_df.columns and "Aspect_Sentiment" in processed_df.columns:
@@ -1113,6 +1113,7 @@ if st.button("Generate & Download PDF Report"):
             file_name="sentiment_analysis_report.pdf",
             mime="application/pdf",
         )
+
 
 
 
