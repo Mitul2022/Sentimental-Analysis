@@ -628,10 +628,10 @@ else:
     # Show total reviews
     st.metric("📄 Total Reviews", total_reviews)
 
-# --- Aggregated Sentiment by Aspect (Clustered Column Chart) ---
-st.header("📊 Aggregated Sentiment by Aspect")
-fig = None
+# --- Aggregated Sentiment by Aspect (100% Stacked Column Chart) ---
+st.header("📊 Aggregated Sentiment by Aspect (100% Stacked)")
 
+fig = None
 if not processed_df.empty and "Aspect" in processed_df.columns and "Aspect_Sentiment" in processed_df.columns:
     # Exclude undefined/nan/blank aspects
     filtered_df = processed_df[
@@ -650,22 +650,28 @@ if not processed_df.empty and "Aspect" in processed_df.columns and "Aspect_Senti
     aspect_sentiment_counts = aspect_sentiment_counts[aspect_sentiment_counts['Aspect'].isin(top_10_aspects)]
 
     if not aspect_sentiment_counts.empty:
-        # Clustered Column Chart (barmode="group")
+        # --- Convert to percentage ---
+        total_per_aspect = aspect_sentiment_counts.groupby("Aspect")["Count"].transform("sum")
+        aspect_sentiment_counts["Percent"] = (aspect_sentiment_counts["Count"] / total_per_aspect) * 100
+
+        # --- 100% Stacked Column Chart ---
         fig = px.bar(
             aspect_sentiment_counts,
             x="Aspect",
-            y="Count",
+            y="Percent",
             color="Aspect_Sentiment",
-            title="Top 10 Aspect Sentiment Distribution",
+            title="Top 10 Aspect Sentiment Distribution (100% Stacked)",
             category_orders={"Aspect": top_10_aspects},
             color_discrete_map={"Positive": "green", "Neutral": "orange", "Negative": "red"},
-            barmode="group"   # <-- grouped instead of stacked
+            barmode="stack",
+            text=aspect_sentiment_counts["Percent"].round(1).astype(str) + "%"  # show % labels
         )
 
         # Layout update
         fig.update_layout(
             xaxis_title="Aspect",
-            yaxis_title="Count",
+            yaxis_title="Percentage (%)",
+            yaxis=dict(tickformat=".0f", range=[0, 100]),
             showlegend=True,
             margin=dict(l=100, r=40, t=80, b=80)
         )
@@ -1107,5 +1113,6 @@ if st.button("Generate & Download PDF Report"):
             file_name="sentiment_analysis_report.pdf",
             mime="application/pdf",
         )
+
 
 
