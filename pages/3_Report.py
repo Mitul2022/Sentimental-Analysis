@@ -940,6 +940,20 @@ else:
     st.info("No processed data available to perform detailed aspect analysis.")
 
 # --- PDF Report Generator ---
+def add_chart_to_pdf(chart_key, title):
+    fig = chart_data.get(chart_key)
+    if fig is None:
+        print(f"⚠️ Chart {chart_key} is missing, skipping...")
+        return
+
+    try:
+        chart_buffer = io.BytesIO()
+        pio.write_image(fig, chart_buffer, format="png", width=700, height=400, scale=2)
+        story.append(Paragraph(title, styles['Heading2']))
+        story.append(Image(chart_buffer, width=500, height=300))
+        story.append(Spacer(1, 12))
+    except Exception as e:
+        print(f"⚠️ Failed to export chart {chart_key}: {e}")
 def generate_pdf_report(chart_data, analysis_data, summary_data, processed_df):
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
@@ -1058,6 +1072,7 @@ if st.button("Generate & Download PDF Report"):
             mime="application/pdf",
 
         )
+
 
 
 
