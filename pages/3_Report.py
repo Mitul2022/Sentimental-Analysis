@@ -22,6 +22,8 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud, STOPWORDS
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
+import plotly.io as pio
+import kaleido 
 
 # =========================
 # Load spaCy NLP Model (Preinstalled in requirements.txt)
@@ -1056,6 +1058,7 @@ if st.button("Generate & Download PDF Report"):
             mime="application/pdf",
 
         )
+
 
 
 
