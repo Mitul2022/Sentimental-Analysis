@@ -832,7 +832,7 @@ if not processed_df.empty and "Aspect" in processed_df.columns and "Aspect_Senti
 else:
     st.info("Data unavailable for treemap visualization.")
 
-# --- Smart N-Gram Analysis (Descending) ---
+# --- Smart N-Gram Analysis (Ascending to Descending) ---
 st.header("🧠 Relevant Phrase Analysis from Negative Feedback")
 if not processed_df.empty and "Aspect_Context" in processed_df.columns and "Aspect_Sentiment" in processed_df.columns:
     def extract_ngrams_from_text(text, n):
@@ -853,23 +853,30 @@ if not processed_df.empty and "Aspect_Context" in processed_df.columns and "Aspe
             three_word_phrases.extend(extract_ngrams_from_text(context, 3))
             four_word_phrases.extend(extract_ngrams_from_text(context, 4))
 
-        # Sort descending (high to low frequency)
-        three_word_count = Counter(three_word_phrases).most_common(5)
-        four_word_count = Counter(four_word_phrases).most_common(5)
+        # Get frequency counts
+        three_word_count = Counter(three_word_phrases)
+        four_word_count = Counter(four_word_phrases)
 
-        # 3-Word Phrases (Descending)
-        st.subheader("3-Word Phrases: Top 5 (Descending Frequency)")
-        if three_word_count:
-            df_3w = pd.DataFrame([{"Phrase": phrase, "Count": count} for phrase, count in three_word_count])
+        # Convert to list of (phrase, count) and sort ASC → DESC
+        three_word_sorted = sorted(three_word_count.items(), key=lambda x: x[1])[:5]   # lowest 5
+        three_word_sorted += sorted(three_word_count.items(), key=lambda x: x[1], reverse=True)[:5]  # top 5
+
+        four_word_sorted = sorted(four_word_count.items(), key=lambda x: x[1])[:5]  
+        four_word_sorted += sorted(four_word_count.items(), key=lambda x: x[1], reverse=True)[:5]  
+
+        # 3-Word Phrases
+        st.subheader("3-Word Phrases (Ascending → Descending)")
+        if three_word_sorted:
+            df_3w = pd.DataFrame([{"Phrase": phrase, "Count": count} for phrase, count in three_word_sorted])
             fig_3w = px.bar(
                 df_3w, 
                 x="Count", 
                 y="Phrase", 
                 orientation='h',
                 text="Count", 
-                color="Count",  # ✅ gradient based on frequency
+                color="Count",  
                 color_continuous_scale="Reds", 
-                title="Top 5 Negative 3-Word Phrases (High to Low)"
+                title="Negative 3-Word Phrases (Low → High Frequency)"
             )
             fig_3w.update_layout(
                 xaxis_title="Frequency", 
@@ -882,19 +889,19 @@ if not processed_df.empty and "Aspect_Context" in processed_df.columns and "Aspe
         else:
             st.info("No 3-word phrases found.")
 
-        # 4-Word Phrases (Descending)
-        st.subheader("4-Word Phrases: Top 5 (Descending Frequency)")
-        if four_word_count:
-            df_4w = pd.DataFrame([{"Phrase": phrase, "Count": count} for phrase, count in four_word_count])
+        # 4-Word Phrases
+        st.subheader("4-Word Phrases (Ascending → Descending)")
+        if four_word_sorted:
+            df_4w = pd.DataFrame([{"Phrase": phrase, "Count": count} for phrase, count in four_word_sorted])
             fig_4w = px.bar(
                 df_4w, 
                 x="Count", 
                 y="Phrase", 
                 orientation='h',
                 text="Count", 
-                color="Count",  # ✅ gradient based on frequency
+                color="Count",  
                 color_continuous_scale="Reds",
-                title="Top 5 Negative 4-Word Phrases (High to Low)"
+                title="Negative 4-Word Phrases (Low → High Frequency)"
             )
             fig_4w.update_layout(
                 xaxis_title="Frequency", 
@@ -1098,3 +1105,4 @@ if st.button("Generate & Download PDF Report"):
             file_name="sentiment_analysis_report.pdf",
             mime="application/pdf",
         )
+
