@@ -223,7 +223,8 @@ common_aspects = [
     "Packaging", "Refund", "Order", "Website", 
     "Value", "Communication"
 ]
-custom_aspects = st.multiselect(
+
+selected_common = st.multiselect(
     "📌 Choose common aspects", 
     options=common_aspects,
     default=common_aspects
@@ -232,16 +233,18 @@ custom_aspects = st.multiselect(
 # --- Manual Aspect Entry ---
 manual_aspects_input = st.text_input("✏️ Enter aspects manually (comma-separated)")
 
-# --- Combine Common and Manual Aspects ---
-# Start with the list from the multiselect
-final_aspects = list(custom_aspects)
+# --- Combine Both ---
+final_aspects = set(selected_common)  # start with common aspects (as set to remove dups)
 
-# Process and add the manually entered aspects
 if manual_aspects_input:
-    # Split the string by commas and strip whitespace
-    manual_list = [aspect.strip() for aspect in manual_aspects_input.split(',')]
-    # Add non-empty manual aspects to the final list
-    final_aspects.extend([aspect for aspect in manual_list if aspect])
+    manual_list = [aspect.strip() for aspect in manual_aspects_input.split(',') if aspect.strip()]
+    final_aspects.update(manual_list)  # merge into set (avoids duplicates automatically)
+
+# Convert back to list for downstream processing
+final_aspects = list(final_aspects)
+
+st.write("🔍 Using Aspects:", final_aspects)
+
         
 if st.button("🚀 Process Data"):
             with st.spinner("Processing reviews..."):
@@ -275,3 +278,4 @@ if st.session_state.processed_data is not None:
     st.download_button("📥 Download Full Aspect Data",
                        st.session_state.processed_data.to_csv(index=False).encode("utf-8"),
                        "aspect_level_breakdown.csv","text/csv")
+
