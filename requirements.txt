@@ -22,7 +22,7 @@ spacy==3.5.3
 nltk==3.8.1
 # ✅ Pre-install SpaCy English model (matches spacy==3.5.3)
 https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.5.0/en_core_web_sm-3.5.0.tar.gz
-kaleido>=0.2.1
+kaleido==0.2.1
 
 # --- Visualization ---
 plotly==5.19.0
@@ -34,4 +34,5 @@ fpdf2==2.7.4
 
 # --- Other ---
 requests
+
 
