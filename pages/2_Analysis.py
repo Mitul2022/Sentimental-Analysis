@@ -219,31 +219,29 @@ if uploaded_file:
 
 # --- Common Aspect Selection ---
 common_aspects = [
-    "Quality", "Delivery", "Price", "Customer Service", 
-    "Packaging", "Refund", "Order", "Website", 
+    "Quality", "Delivery", "Price", "Customer Service",
+    "Packaging", "Refund", "Order", "Website",
     "Value", "Communication"
 ]
-
-selected_common = st.multiselect(
-    "📌 Choose common aspects", 
-    options=common_aspects,
-    default=common_aspects
-)
 
 # --- Manual Aspect Entry ---
 manual_aspects_input = st.text_input("✏️ Enter aspects manually (comma-separated)")
 
-# --- Combine Both ---
-final_aspects = set(selected_common)  # start with common aspects (as set to remove dups)
-
+# Extend common_aspects with manual aspects dynamically
 if manual_aspects_input:
     manual_list = [aspect.strip() for aspect in manual_aspects_input.split(',') if aspect.strip()]
-    final_aspects.update(manual_list)  # merge into set (avoids duplicates automatically)
+    common_aspects = list(set(common_aspects + manual_list))  # merge & deduplicate
 
-# Convert back to list for downstream processing
-final_aspects = list(final_aspects)
+# --- Common Aspect Selection (now includes manual aspects) ---
+custom_aspects = st.multiselect(
+    "📌 Choose common aspects",
+    options=common_aspects,
+    default=common_aspects
+)
 
-st.write("🔍 Using Aspects:", final_aspects)
+# --- Final Aspects ---
+final_aspects = list(custom_aspects)
+
 
         
 if st.button("🚀 Process Data"):
