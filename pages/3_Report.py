@@ -939,66 +939,69 @@ if not processed_df.empty and "Aspect_Sentiment" in processed_df.columns:
 else:
     st.info("No processed data available to perform detailed aspect analysis.")
 
-# --- PDF Report Generator ---
-def add_chart_to_pdf(chart_key, title):
-    fig = chart_data.get(chart_key)
-    if fig is None:
-        print(f"⚠️ Chart {chart_key} is missing, skipping...")
-        return
+from fpdf import FPDF
+import io
+import plotly.io as pio
+import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+import streamlit as st
 
-    try:
-        chart_buffer = io.BytesIO()
-        pio.write_image(fig, chart_buffer, format="png", width=700, height=400, scale=2)
-        story.append(Paragraph(title, styles['Heading2']))
-        story.append(Image(chart_buffer, width=500, height=300))
-        story.append(Spacer(1, 12))
-    except Exception as e:
-        print(f"⚠️ Failed to export chart {chart_key}: {e}")
 def generate_pdf_report(chart_data, analysis_data, summary_data, processed_df):
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
+
+    # --- Title Page ---
     pdf.add_page()
     pdf.set_font("Arial", 'B', 24)
     pdf.cell(0, 10, "Sentiment Analysis Report", 0, 1, 'C')
-    pdf.ln(10)
+    pdf.ln(15)
+
+    # --- KPIs ---
     pdf.set_font("Arial", 'B', 16)
     pdf.cell(0, 10, "Key Performance Indicators (KPIs)", 0, 1, 'L')
     pdf.ln(5)
-    if not summary_data.empty:
+
+    if summary_data is not None and not summary_data.empty:
         total_reviews = summary_data.shape[0]
         if total_reviews > 0:
             positive = summary_data[summary_data["Final_Sentiment"] == "Positive"].shape[0]
             neutral = summary_data[summary_data["Final_Sentiment"] == "Neutral"].shape[0]
             negative = summary_data[summary_data["Final_Sentiment"] == "Negative"].shape[0]
-            pdf.set_font("Arial", '', 12)
-            col_width = pdf.w / 4 - 10
+
             pdf.set_font("Arial", 'B', 12)
+            col_width = pdf.w / 4 - 10
             pdf.cell(col_width, 8, "Total Reviews", 1, 0, 'C')
             pdf.cell(col_width, 8, "Positive", 1, 0, 'C')
             pdf.cell(col_width, 8, "Neutral", 1, 0, 'C')
             pdf.cell(col_width, 8, "Negative", 1, 1, 'C')
+
             pdf.set_font("Arial", '', 12)
             pdf.cell(col_width, 8, str(total_reviews), 1, 0, 'C')
-            pdf.cell(col_width, 8, f"{positive} ({positive / total_reviews:.0%})", 1, 0, 'C')
-            pdf.cell(col_width, 8, f"{neutral} ({neutral / total_reviews:.0%})", 1, 0, 'C')
-            pdf.cell(col_width, 8, f"{negative} ({negative / total_reviews:.0%})", 1, 1, 'C')
+            pdf.cell(col_width, 8, f"{positive} ({positive/total_reviews:.0%})", 1, 0, 'C')
+            pdf.cell(col_width, 8, f"{neutral} ({neutral/total_reviews:.0%})", 1, 0, 'C')
+            pdf.cell(col_width, 8, f"{negative} ({negative/total_reviews:.0%})", 1, 1, 'C')
             pdf.ln(10)
-    pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, "Top 10 Aspects Sentiment Breakdown", 0, 1, 'L')
-    pdf.ln(5)
-    if not processed_df.empty:
+
+    # --- Top Aspects ---
+    if processed_df is not None and not processed_df.empty:
+        pdf.set_font("Arial", 'B', 16)
+        pdf.cell(0, 10, "Top 10 Aspects Sentiment Breakdown", 0, 1, 'L')
+        pdf.ln(5)
+
         pivot_df = processed_df.pivot_table(
             index=processed_df['Aspect'].str.lower(),
             columns="Aspect_Sentiment",
             aggfunc="size",
             fill_value=0
         ).reset_index()
+
         for col in ["Positive", "Negative", "Neutral"]:
             if col not in pivot_df.columns:
                 pivot_df[col] = 0
-        total = pivot_df[["Positive", "Negative", "Neutral"]].sum(axis=1)
-        pivot_df["Total_Mentions"] = total
+
+        pivot_df["Total_Mentions"] = pivot_df[["Positive", "Negative", "Neutral"]].sum(axis=1)
         top_10_df = pivot_df.sort_values(by="Total_Mentions", ascending=False).head(10)
+
         if not top_10_df.empty:
             pdf.set_font("Arial", 'B', 10)
             col_widths = [40, 30, 30, 30, 30]
@@ -1007,75 +1010,91 @@ def generate_pdf_report(chart_data, analysis_data, summary_data, processed_df):
             pdf.cell(col_widths[2], 7, "Positive", 1, 0, 'C')
             pdf.cell(col_widths[3], 7, "Neutral", 1, 0, 'C')
             pdf.cell(col_widths[4], 7, "Negative", 1, 1, 'C')
+
             pdf.set_font("Arial", '', 10)
             for _, row in top_10_df.iterrows():
-                pdf.cell(col_widths[0], 7, row['Aspect'].replace('_', ' ').title(), 1, 0, 'L')
+                pdf.cell(col_widths[0], 7, row['Aspect'].replace('_',' ').title(), 1, 0, 'L')
                 pdf.cell(col_widths[1], 7, str(row['Total_Mentions']), 1, 0, 'C')
                 pdf.cell(col_widths[2], 7, str(row['Positive']), 1, 0, 'C')
                 pdf.cell(col_widths[3], 7, str(row['Neutral']), 1, 0, 'C')
                 pdf.cell(col_widths[4], 7, str(row['Negative']), 1, 1, 'C')
             pdf.ln(10)
+
+    # --- Charts Section ---
     pdf.add_page()
     pdf.set_font("Arial", 'B', 16)
     pdf.cell(0, 10, "Visual Data Summary", 0, 1, 'L')
     pdf.ln(5)
-    chart_buffer = io.BytesIO()
+
     def add_chart_to_pdf(chart_key, title):
-        if chart_key in chart_data and chart_data[chart_key] is not None:
+        fig = chart_data.get(chart_key)
+        if fig is None:
+            pdf.set_font("Arial", '', 10)
+            pdf.cell(0, 10, f"{title}: Not Available", 0, 1)
+            return
+
+        try:
+            buf = io.BytesIO()
+            if isinstance(fig, go.Figure):
+                pio.write_image(fig, buf, format='png', width=700, height=400, scale=2)
+            elif isinstance(fig, plt.Figure):
+                fig.savefig(buf, format='png', bbox_inches='tight')
+            buf.seek(0)
             pdf.set_font("Arial", 'B', 12)
             pdf.cell(0, 10, title, 0, 1, 'L')
-            chart_buffer.seek(0)
-            if isinstance(chart_data[chart_key], go.Figure):
-                pio.write_image(chart_data[chart_key], chart_buffer, format='png', width=700, height=400, scale=2)
-            elif isinstance(chart_data[chart_key], plt.Figure):
-                chart_data[chart_key].savefig(chart_buffer, format='png', bbox_inches='tight')
-            chart_buffer.seek(0)
-            try:
-                pdf.image(chart_buffer, x=10, w=180)
-            except Exception as e:
-                pdf.set_font("Arial", '', 10)
-                pdf.cell(0, 10, f"Failed to load chart {title}: {e}", 0, 1)
-            pdf.ln(5)
-    add_chart_to_pdf('avg_sentiment_scores', "Average NLP Sentiment Scores")
-    add_chart_to_pdf('nps_gauge', "Net Promoter Score (NPS)")
-    add_chart_to_pdf('aspect_sentiment_distribution', "Aggregated Sentiment by Aspect")
-    add_chart_to_pdf('top_negative', "Top 3 Most Negative Aspects")
-    add_chart_to_pdf('top_positive', "Top 3 Most Positive Aspects")
-    add_chart_to_pdf('top_neutral', "Top 3 Most Neutral Aspects")
-    add_chart_to_pdf('word_cloud', "Negative Context Word Cloud")
-    add_chart_to_pdf('treemap', "Aspect-Sentiment Treemap (Top 20 Aspects)")
-    add_chart_to_pdf('aspect_heatmap', "Aspect Sentiment Heatmap")
-    add_chart_to_pdf('smart_bigrams', "Top 5 Relevant 2-Word Phrases")
-    add_chart_to_pdf('smart_trigrams', "Top 5 Relevant 3-Word Phrases")
-    add_chart_to_pdf('smart_fourgrams', "Top 5 Relevant 4-Word Phrases")
+            pdf.image(buf, x=10, w=180)
+            pdf.ln(8)
+        except Exception as e:
+            print(f"⚠️ Chart export failed for {chart_key}: {e}")
+            pdf.set_font("Arial", '', 10)
+            pdf.cell(0, 10, f"{title}: Failed to render", 0, 1)
+
+    # Add all charts safely
+    for key, label in [
+        ('avg_sentiment_scores', "Average NLP Sentiment Scores"),
+        ('nps_gauge', "Net Promoter Score (NPS)"),
+        ('aspect_sentiment_distribution', "Aggregated Sentiment by Aspect"),
+        ('top_negative', "Top 3 Most Negative Aspects"),
+        ('top_positive', "Top 3 Most Positive Aspects"),
+        ('top_neutral', "Top 3 Most Neutral Aspects"),
+        ('word_cloud', "Negative Context Word Cloud"),
+        ('treemap', "Aspect-Sentiment Treemap (Top 20 Aspects)"),
+        ('aspect_heatmap', "Aspect Sentiment Heatmap"),
+        ('smart_bigrams', "Top 5 Relevant 2-Word Phrases"),
+        ('smart_trigrams', "Top 5 Relevant 3-Word Phrases"),
+        ('smart_fourgrams', "Top 5 Relevant 4-Word Phrases"),
+    ]:
+        add_chart_to_pdf(key, label)
+
+    # --- Recommendations Section ---
     pdf.add_page()
     pdf.set_font("Arial", 'B', 16)
     pdf.cell(0, 10, "Detailed Analysis & Recommendations", 0, 1, 'L')
     pdf.ln(5)
-    for aspect, content in analysis_data.items():
-        pdf.set_font("Arial", 'B', 14)
-        pdf.cell(0, 10, f"Aspect: {aspect.replace('_', ' ').title()}", 0, 1, 'L')
-        pdf.ln(2)
-        pdf.set_font("Arial", '', 10)
-        pdf.multi_cell(w=0, h=5, txt=content, align='L')
-        pdf.ln(5)
+
+    if analysis_data:
+        for aspect, content in analysis_data.items():
+            pdf.set_font("Arial", 'B', 14)
+            pdf.cell(0, 10, f"Aspect: {aspect.replace('_', ' ').title()}", 0, 1, 'L')
+            pdf.set_font("Arial", '', 10)
+            pdf.multi_cell(0, 5, content, align='L')
+            pdf.ln(5)
+
     return bytes(pdf.output(dest='S'))
 
+# --- Streamlit Button ---
 st.markdown("---")
 if st.button("Generate & Download PDF Report"):
     with st.spinner("Generating PDF..."):
-        pdf_bytes = generate_pdf_report(st.session_state.chart_data, st.session_state.negative_analysis_data, st.session_state.summary_data, processed_df)
+        pdf_bytes = generate_pdf_report(
+            st.session_state.chart_data,
+            st.session_state.negative_analysis_data,
+            st.session_state.summary_data,
+            processed_df
+        )
         st.download_button(
-            label="Click to Download PDF",
+            label="📄 Download PDF Report",
             data=pdf_bytes,
             file_name="sentiment_analysis_report.pdf",
             mime="application/pdf",
-
         )
-
-
-
-
-
-
-
