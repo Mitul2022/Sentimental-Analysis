@@ -1069,9 +1069,6 @@ def generate_pdf_report(chart_data, analysis_data, summary_data, processed_df):
         ('avg_sentiment_scores', "Average NLP Sentiment Scores"),
         ('nps_gauge', "Net Promoter Score (NPS)"),
         ('aspect_sentiment_distribution', "Aggregated Sentiment by Aspect"),
-        ('top_negative', "Top 3 Most Negative Aspects"),
-        ('top_positive', "Top 3 Most Positive Aspects"),
-        ('top_neutral', "Top 3 Most Neutral Aspects"),
         ('word_cloud', "Negative Context Word Cloud"),
         ('treemap', "Aspect-Sentiment Treemap (Top 20 Aspects)"),
         ('aspect_heatmap', "Aspect Sentiment Heatmap"),
@@ -1113,6 +1110,7 @@ if st.button("Generate & Download PDF Report"):
             file_name="sentiment_analysis_report.pdf",
             mime="application/pdf",
         )
+
 
 
 
